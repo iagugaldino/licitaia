@@ -1,0 +1,937 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>LicitaIA — Licitações com Inteligência</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0D0F14;
+    --surface: #13161E;
+    --surface2: #1A1E29;
+    --border: #232840;
+    --accent: #4F6EF7;
+    --accent-light: #6B87FF;
+    --accent-glow: rgba(79,110,247,0.15);
+    --green: #22C55E;
+    --yellow: #F59E0B;
+    --red: #EF4444;
+    --text: #E8EAF0;
+    --muted: #6B7280;
+    --muted2: #9CA3AF;
+    --font-display: 'Space Grotesk', sans-serif;
+    --font-body: 'Inter', sans-serif;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { background:var(--bg); color:var(--text); font-family:var(--font-body); min-height:100vh; display:flex; }
+
+  /* SIDEBAR */
+  .sidebar {
+    width:240px; min-height:100vh; background:var(--surface);
+    border-right:1px solid var(--border); display:flex; flex-direction:column;
+    padding:24px 0; position:fixed; top:0; left:0; z-index:100;
+  }
+  .logo { padding:0 20px 28px; display:flex; align-items:center; gap:10px; }
+  .logo-icon {
+    width:36px; height:36px; background:var(--accent); border-radius:10px;
+    display:flex; align-items:center; justify-content:center; font-size:16px;
+  }
+  .logo-text { font-family:var(--font-display); font-weight:700; font-size:18px; color:var(--text); }
+  .logo-text span { color:var(--accent-light); }
+  .nav-section { padding:8px 12px 4px; font-size:10px; font-weight:600; color:var(--muted); letter-spacing:0.1em; text-transform:uppercase; }
+  .nav-item {
+    display:flex; align-items:center; gap:10px; padding:10px 20px; margin:1px 8px;
+    border-radius:8px; cursor:pointer; transition:all 0.15s; font-size:14px;
+    color:var(--muted2); font-weight:500; text-decoration:none;
+  }
+  .nav-item:hover { background:var(--surface2); color:var(--text); }
+  .nav-item.active { background:var(--accent-glow); color:var(--accent-light); border:1px solid rgba(79,110,247,0.2); }
+  .nav-item .icon { font-size:16px; width:20px; text-align:center; }
+  .sidebar-footer { margin-top:auto; padding:16px; border-top:1px solid var(--border); }
+  .user-card { display:flex; align-items:center; gap:10px; padding:10px; border-radius:8px; background:var(--surface2); }
+  .user-avatar { width:32px; height:32px; border-radius:50%; background:var(--accent); display:flex; align-items:center; justify-content:center; font-size:13px; font-weight:700; color:#fff; }
+  .user-info p { font-size:13px; font-weight:600; }
+  .user-info span { font-size:11px; color:var(--muted); }
+  .plan-badge { margin-left:auto; background:var(--accent-glow); color:var(--accent-light); font-size:10px; padding:2px 7px; border-radius:20px; border:1px solid rgba(79,110,247,0.3); font-weight:600; }
+
+  /* MAIN */
+  .main { margin-left:240px; flex:1; min-height:100vh; }
+  .topbar {
+    position:sticky; top:0; z-index:50; background:rgba(13,15,20,0.92);
+    backdrop-filter:blur(12px); border-bottom:1px solid var(--border);
+    padding:0 32px; height:60px; display:flex; align-items:center; gap:16px;
+  }
+  .topbar-title { font-family:var(--font-display); font-weight:600; font-size:16px; flex:1; }
+  .topbar-title span { color:var(--muted); font-weight:400; font-size:14px; }
+  .btn {
+    display:inline-flex; align-items:center; gap:7px; padding:8px 16px;
+    border-radius:8px; font-size:13px; font-weight:600; cursor:pointer;
+    border:none; transition:all 0.15s; font-family:var(--font-body);
+  }
+  .btn-primary { background:var(--accent); color:#fff; }
+  .btn-primary:hover { background:var(--accent-light); transform:translateY(-1px); }
+  .btn-ghost { background:var(--surface2); color:var(--muted2); border:1px solid var(--border); }
+  .btn-ghost:hover { color:var(--text); border-color:var(--accent); }
+
+  .content { padding:32px; }
+
+  /* STATS */
+  .stats-row { display:grid; grid-template-columns:repeat(4,1fr); gap:16px; margin-bottom:28px; }
+  .stat-card {
+    background:var(--surface); border:1px solid var(--border); border-radius:12px;
+    padding:20px; transition:border-color 0.15s;
+  }
+  .stat-card:hover { border-color:var(--accent); }
+  .stat-label { font-size:12px; color:var(--muted); font-weight:500; margin-bottom:8px; display:flex; align-items:center; gap:6px; }
+  .stat-value { font-family:var(--font-display); font-size:28px; font-weight:700; color:var(--text); }
+  .stat-sub { font-size:12px; color:var(--muted); margin-top:4px; }
+  .stat-sub .up { color:var(--green); }
+  .stat-sub .down { color:var(--red); }
+
+  /* SEARCH BAR */
+  .search-area {
+    background:var(--surface); border:1px solid var(--border); border-radius:12px;
+    padding:20px; margin-bottom:20px; display:flex; gap:12px; align-items:flex-end; flex-wrap:wrap;
+  }
+  .search-group { flex:1; min-width:200px; }
+  .search-group label { display:block; font-size:12px; color:var(--muted); font-weight:500; margin-bottom:6px; }
+  .search-input {
+    width:100%; background:var(--bg); border:1px solid var(--border); border-radius:8px;
+    padding:9px 14px; color:var(--text); font-size:14px; font-family:var(--font-body);
+    outline:none; transition:border-color 0.15s;
+  }
+  .search-input:focus { border-color:var(--accent); }
+  .search-input::placeholder { color:var(--muted); }
+
+  /* LICITAÇÕES LIST */
+  .section-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:16px; }
+  .section-title { font-family:var(--font-display); font-size:16px; font-weight:600; }
+  .section-sub { font-size:13px; color:var(--muted); margin-top:2px; }
+  .badge { display:inline-flex; align-items:center; gap:4px; padding:3px 10px; border-radius:20px; font-size:12px; font-weight:600; }
+  .badge-blue { background:rgba(79,110,247,0.12); color:var(--accent-light); border:1px solid rgba(79,110,247,0.2); }
+  .badge-green { background:rgba(34,197,94,0.1); color:var(--green); border:1px solid rgba(34,197,94,0.2); }
+  .badge-yellow { background:rgba(245,158,11,0.1); color:var(--yellow); border:1px solid rgba(245,158,11,0.2); }
+  .badge-red { background:rgba(239,68,68,0.1); color:var(--red); border:1px solid rgba(239,68,68,0.2); }
+
+  .licit-card {
+    background:var(--surface); border:1px solid var(--border); border-radius:12px;
+    padding:20px; margin-bottom:12px; cursor:pointer; transition:all 0.18s;
+    position:relative; overflow:hidden;
+  }
+  .licit-card::before {
+    content:''; position:absolute; left:0; top:0; bottom:0; width:3px;
+    background:var(--accent); border-radius:3px 0 0 3px; opacity:0; transition:opacity 0.15s;
+  }
+  .licit-card:hover { border-color:var(--accent); transform:translateX(2px); }
+  .licit-card:hover::before { opacity:1; }
+  .licit-top { display:flex; align-items:flex-start; justify-content:space-between; gap:16px; margin-bottom:10px; }
+  .licit-obj { font-size:14px; font-weight:600; line-height:1.4; flex:1; }
+  .licit-meta { display:flex; gap:16px; flex-wrap:wrap; margin-bottom:12px; }
+  .licit-meta-item { font-size:12px; color:var(--muted); display:flex; align-items:center; gap:5px; }
+  .licit-meta-item strong { color:var(--muted2); font-weight:500; }
+  .licit-footer { display:flex; align-items:center; gap:10px; }
+  .licit-value { font-family:var(--font-display); font-size:16px; font-weight:700; color:var(--text); }
+  .licit-value-label { font-size:11px; color:var(--muted); margin-top:1px; }
+
+  /* AI ANALYSIS BOX */
+  .ai-box {
+    background:rgba(79,110,247,0.06); border:1px solid rgba(79,110,247,0.2);
+    border-radius:10px; padding:14px 16px; margin-top:12px; display:none;
+  }
+  .ai-box.show { display:block; }
+  .ai-box-header { display:flex; align-items:center; gap:8px; margin-bottom:8px; font-size:12px; font-weight:600; color:var(--accent-light); }
+  .ai-box-text { font-size:13px; color:var(--muted2); line-height:1.6; }
+  .ai-loading { display:flex; align-items:center; gap:8px; font-size:13px; color:var(--muted); }
+  .dot-pulse { display:flex; gap:4px; }
+  .dot-pulse span {
+    width:5px; height:5px; border-radius:50%; background:var(--accent);
+    animation:pulse 1.2s ease-in-out infinite;
+  }
+  .dot-pulse span:nth-child(2) { animation-delay:0.2s; }
+  .dot-pulse span:nth-child(3) { animation-delay:0.4s; }
+  @keyframes pulse { 0%,80%,100%{opacity:0.2} 40%{opacity:1} }
+
+  /* EMPTY / LOADING */
+  .loader-wrap { text-align:center; padding:60px 20px; }
+  .spinner {
+    width:40px; height:40px; border:3px solid var(--border);
+    border-top-color:var(--accent); border-radius:50%;
+    animation:spin 0.8s linear infinite; margin:0 auto 16px;
+  }
+  @keyframes spin { to { transform:rotate(360deg); } }
+  .empty-state { text-align:center; padding:60px 20px; color:var(--muted); }
+  .empty-state .icon { font-size:40px; margin-bottom:12px; }
+  .empty-state p { font-size:15px; }
+
+  /* MODAL */
+  .modal-overlay {
+    position:fixed; inset:0; background:rgba(0,0,0,0.7); z-index:200;
+    display:none; align-items:center; justify-content:center; padding:20px;
+  }
+  .modal-overlay.show { display:flex; }
+  .modal {
+    background:var(--surface); border:1px solid var(--border); border-radius:16px;
+    width:100%; max-width:680px; max-height:90vh; overflow-y:auto; padding:32px;
+    animation:slideUp 0.2s ease;
+  }
+  @keyframes slideUp { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)} }
+  .modal-header { display:flex; align-items:flex-start; justify-content:space-between; gap:16px; margin-bottom:24px; }
+  .modal-title { font-family:var(--font-display); font-size:18px; font-weight:700; line-height:1.3; }
+  .modal-close { background:none; border:none; color:var(--muted); font-size:20px; cursor:pointer; padding:4px; min-width:44px; min-height:44px; display:flex; align-items:center; justify-content:center; }
+  .modal-close:hover { color:var(--text); }
+  .modal-section { margin-bottom:20px; }
+  .modal-label { font-size:11px; font-weight:600; color:var(--muted); text-transform:uppercase; letter-spacing:0.05em; margin-bottom:6px; }
+  .modal-value { font-size:14px; color:var(--text); line-height:1.5; }
+  .modal-grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+  .modal-ai { background:rgba(79,110,247,0.06); border:1px solid rgba(79,110,247,0.2); border-radius:12px; padding:20px; margin-top:20px; }
+  .modal-ai h4 { font-size:13px; font-weight:600; color:var(--accent-light); margin-bottom:10px; display:flex; align-items:center; gap:6px; }
+  .modal-ai p { font-size:14px; color:var(--muted2); line-height:1.7; }
+
+  /* TABS */
+  .tabs { display:flex; gap:4px; background:var(--surface2); border-radius:10px; padding:4px; margin-bottom:24px; }
+  .tab-btn {
+    flex:1; text-align:center; padding:8px; border-radius:7px; font-size:13px;
+    font-weight:500; cursor:pointer; transition:all 0.15s; border:none;
+    background:transparent; color:var(--muted); font-family:var(--font-body);
+  }
+  .tab-btn.active { background:var(--surface); color:var(--text); box-shadow:0 1px 3px rgba(0,0,0,0.3); }
+
+  /* PAGINATION */
+  .pagination { display:flex; align-items:center; justify-content:center; gap:8px; margin-top:24px; }
+  .page-btn {
+    width:36px; height:36px; border-radius:8px; border:1px solid var(--border);
+    background:var(--surface); color:var(--muted2); font-size:13px; cursor:pointer;
+    display:flex; align-items:center; justify-content:center; transition:all 0.15s;
+    font-family:var(--font-body);
+  }
+  .page-btn:hover { border-color:var(--accent); color:var(--text); }
+  .page-btn.active { background:var(--accent); border-color:var(--accent); color:#fff; }
+  .page-info { font-size:13px; color:var(--muted); }
+
+  /* SCROLLBAR */
+  ::-webkit-scrollbar { width:6px; }
+  ::-webkit-scrollbar-track { background:var(--bg); }
+  ::-webkit-scrollbar-thumb { background:var(--border); border-radius:3px; }
+  ::-webkit-scrollbar-thumb:hover { background:var(--muted); }
+
+  /* DAILY DIGEST CARD */
+  .digest-card {
+    background:linear-gradient(135deg, rgba(79,110,247,0.12), rgba(107,92,246,0.08));
+    border:1px solid rgba(79,110,247,0.25); border-radius:14px;
+    padding:18px 20px; margin-bottom:20px; display:flex; align-items:center; gap:14px;
+  }
+  .digest-icon { width:42px; height:42px; border-radius:10px; background:var(--accent); display:flex; align-items:center; justify-content:center; font-size:18px; flex-shrink:0; }
+  .digest-text { flex:1; }
+  .digest-text strong { font-size:14px; display:block; margin-bottom:2px; }
+  .digest-text span { font-size:12px; color:var(--muted2); }
+  .digest-toggle { position:relative; width:42px; height:24px; flex-shrink:0; cursor:pointer; }
+  .digest-toggle input { opacity:0; width:0; height:0; }
+  .digest-toggle .track { position:absolute; inset:0; background:var(--border); border-radius:20px; transition:0.2s; }
+  .digest-toggle .track::before { content:''; position:absolute; width:18px; height:18px; left:3px; top:3px; background:#fff; border-radius:50%; transition:0.2s; }
+  .digest-toggle input:checked + .track { background:var(--accent); }
+  .digest-toggle input:checked + .track::before { transform:translateX(18px); }
+
+  /* MOBILE BOTTOM NAV */
+  .bottom-nav {
+    display:none; position:fixed; bottom:0; left:0; right:0; z-index:120;
+    background:rgba(19,22,30,0.96); backdrop-filter:blur(14px);
+    border-top:1px solid var(--border);
+    padding:8px 4px calc(8px + env(safe-area-inset-bottom));
+    justify-content:space-around; align-items:center;
+  }
+  .bottom-nav-item {
+    display:flex; flex-direction:column; align-items:center; gap:3px;
+    color:var(--muted); font-size:10px; font-weight:500; background:none; border:none;
+    padding:6px 10px; min-width:44px; min-height:44px; justify-content:center;
+    position:relative; font-family:var(--font-body);
+  }
+  .bottom-nav-item .icon { font-size:19px; }
+  .bottom-nav-item.active { color:var(--accent-light); }
+  .bottom-nav-item .dot { position:absolute; top:0; right:2px; width:7px; height:7px; background:var(--red); border-radius:50%; border:2px solid var(--surface); }
+
+  .mobile-menu-btn { display:none; background:none; border:none; color:var(--text); font-size:20px; padding:6px; cursor:pointer; }
+
+  @media(max-width:768px){
+    html { -webkit-text-size-adjust:100%; text-size-adjust:100%; }
+    .sidebar{
+      transform:translateX(-100%); transition:transform 0.25s ease; width:80vw; max-width:300px;
+      box-shadow:0 0 40px rgba(0,0,0,0.5); display:flex;
+    }
+    .sidebar.open{ transform:translateX(0); }
+    .main{margin-left:0}
+    .topbar{ padding:0 16px; height:56px; gap:10px; }
+    .topbar-title{ font-size:14px; }
+    .mobile-menu-btn{ display:block; }
+    .topbar .btn{ padding:7px 10px; font-size:12px; }
+    .content{ padding:16px 14px calc(90px + env(safe-area-inset-bottom)); }
+    .stats-row{ grid-template-columns:1fr 1fr; gap:10px; margin-bottom:20px; }
+    .stat-card{ padding:14px; }
+    .stat-value{ font-size:21px; }
+    .stat-label{ font-size:11px; }
+    .search-area{ flex-direction:column; align-items:stretch; gap:10px; padding:16px; }
+    .search-area .btn{ width:100%; justify-content:center; padding:12px; min-height:44px; }
+    .tabs{ overflow-x:auto; -webkit-overflow-scrolling:touch; }
+    .tab-btn{ flex:0 0 auto; padding:8px 14px; white-space:nowrap; }
+    .licit-card{ padding:16px; }
+    .licit-top{ flex-direction:column; gap:8px; }
+    .licit-meta{ gap:10px; }
+    .licit-footer{ flex-wrap:wrap; }
+    .modal-overlay{ padding:0; align-items:flex-end; }
+    .modal{
+      max-width:100%; width:100%; max-height:92vh; border-radius:18px 18px 0 0;
+      padding:20px 18px calc(20px + env(safe-area-inset-bottom));
+      animation:slideUpMobile 0.25s ease;
+    }
+    @keyframes slideUpMobile { from{transform:translateY(100%)} to{transform:translateY(0)} }
+    .modal-grid{ grid-template-columns:1fr; gap:12px; }
+    .bottom-nav{ display:flex; }
+    .digest-card{ flex-wrap:wrap; padding:14px 16px; }
+    .pagination{ flex-wrap:wrap; }
+  }
+
+  /* Prevent iOS auto-zoom on focus: inputs/selects must render at >=16px */
+  @media(max-width:768px){
+    .search-input, select.search-input { font-size:16px !important; }
+  }
+
+  .sidebar-overlay {
+    display:none; position:fixed; inset:0; background:rgba(0,0,0,0.55); z-index:99;
+  }
+  .sidebar-overlay.show { display:block; }
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<div class="sidebar-overlay" id="sidebar-overlay" onclick="toggleSidebar(false)"></div>
+<aside class="sidebar" id="sidebar">
+  <div class="logo">
+    <div class="logo-icon">⚡</div>
+    <div class="logo-text">Licita<span>IA</span></div>
+  </div>
+  <div class="nav-section">Principal</div>
+  <a class="nav-item active" onclick="toggleSidebar(false)">
+    <span class="icon">📊</span> Dashboard
+  </a>
+  <a class="nav-item" onclick="toggleSidebar(false)">
+    <span class="icon">🔍</span> Explorar
+  </a>
+  <a class="nav-item" onclick="toggleSidebar(false)">
+    <span class="icon">⭐</span> Favoritos
+  </a>
+  <a class="nav-item" onclick="toggleSidebar(false)">
+    <span class="icon">🔔</span> Alertas
+    <span style="margin-left:auto;background:var(--red);color:#fff;font-size:10px;padding:1px 6px;border-radius:10px;font-weight:700">3</span>
+  </a>
+  <div class="nav-section" style="margin-top:16px">Configuração</div>
+  <a class="nav-item" onclick="toggleSidebar(false)">
+    <span class="icon">🏢</span> Minha Empresa
+  </a>
+  <a class="nav-item" onclick="toggleSidebar(false)">
+    <span class="icon">⚙️</span> Preferências
+  </a>
+  <a class="nav-item" onclick="toggleSidebar(false)">
+    <span class="icon">💳</span> Plano
+  </a>
+  <div class="sidebar-footer">
+    <div class="user-card">
+      <div class="user-avatar">G</div>
+      <div class="user-info">
+        <p>Galdino</p>
+        <span>Admin</span>
+      </div>
+      <span class="plan-badge">PRO</span>
+    </div>
+  </div>
+</aside>
+
+<!-- MAIN -->
+<main class="main">
+  <div class="topbar">
+    <button class="mobile-menu-btn" onclick="toggleSidebar(true)">☰</button>
+    <div class="topbar-title">
+      Dashboard <span>/ Licitações</span>
+    </div>
+    <button class="btn btn-ghost" onclick="loadLicitacoes()">🔄</button>
+    <button class="btn btn-primary" onclick="openAlertModal()">+ Alerta</button>
+  </div>
+
+  <div class="content">
+
+    <!-- LEMBRETE DIÁRIO -->
+    <div class="digest-card">
+      <div class="digest-icon">🔔</div>
+      <div class="digest-text">
+        <strong>Resumo diário às 8h</strong>
+        <span>Receba as licitações relevantes do dia direto no WhatsApp</span>
+      </div>
+      <button class="btn btn-ghost" style="flex-shrink:0" onclick="openDigestModal()">Configurar</button>
+      <label class="digest-toggle">
+        <input type="checkbox" id="digest-toggle" checked onchange="toggleDigest(this)">
+        <span class="track"></span>
+      </label>
+    </div>
+
+    <!-- STATS -->
+    <div class="stats-row">
+      <div class="stat-card">
+        <div class="stat-label">📋 Abertas Hoje</div>
+        <div class="stat-value" id="stat-abertas">—</div>
+        <div class="stat-sub"><span class="up">+12%</span> vs ontem</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">✅ Relevantes pra Você</div>
+        <div class="stat-value" id="stat-relevantes">—</div>
+        <div class="stat-sub">Baseado no seu perfil</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">⏰ Encerrando em 48h</div>
+        <div class="stat-value" id="stat-urgentes">—</div>
+        <div class="stat-sub"><span class="down">Atenção!</span></div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">💰 Volume Total (R$)</div>
+        <div class="stat-value" id="stat-volume">—</div>
+        <div class="stat-sub">Neste resultado</div>
+      </div>
+    </div>
+
+    <!-- TABS -->
+    <div class="tabs">
+      <button class="tab-btn active" onclick="switchTab(this,'todas')">Todas</button>
+      <button class="tab-btn" onclick="switchTab(this,'abertas')">Com propostas abertas</button>
+      <button class="tab-btn" onclick="switchTab(this,'dispensa')">Dispensa</button>
+      <button class="tab-btn" onclick="switchTab(this,'pregao')">Pregão Eletrônico</button>
+    </div>
+
+    <!-- BUSCA -->
+    <div class="search-area">
+      <div class="search-group" style="flex:2">
+        <label>Buscar por palavra-chave</label>
+        <input type="text" class="search-input" id="keyword" placeholder="Ex: informática, limpeza, construção, consultoria..." />
+      </div>
+      <div class="search-group">
+        <label>Estado (UF)</label>
+        <select class="search-input" id="uf">
+          <option value="">Todos os estados</option>
+          <option value="SP">São Paulo</option>
+          <option value="RJ">Rio de Janeiro</option>
+          <option value="MG">Minas Gerais</option>
+          <option value="RS">Rio Grande do Sul</option>
+          <option value="PR">Paraná</option>
+          <option value="SC">Santa Catarina</option>
+          <option value="BA">Bahia</option>
+          <option value="GO">Goiás</option>
+          <option value="DF">Distrito Federal</option>
+          <option value="CE">Ceará</option>
+        </select>
+      </div>
+      <button class="btn btn-primary" onclick="loadLicitacoes()">🔍 Buscar</button>
+      <button class="btn btn-primary" style="background:#6B5CF6" onclick="analyzeWithAI()">✨ Análise por IA</button>
+    </div>
+
+    <!-- HEADER RESULTADOS -->
+    <div class="section-header">
+      <div>
+        <div class="section-title">Licitações encontradas</div>
+        <div class="section-sub" id="result-sub">Buscando dados do PNCP...</div>
+      </div>
+      <div id="result-badge"></div>
+    </div>
+
+    <!-- LISTA -->
+    <div id="licit-list">
+      <div class="loader-wrap">
+        <div class="spinner"></div>
+        <p style="color:var(--muted);font-size:14px">Conectando ao PNCP...</p>
+      </div>
+    </div>
+
+    <!-- PAGINATION -->
+    <div class="pagination" id="pagination"></div>
+
+  </div>
+</main>
+
+<!-- MODAL DETALHE -->
+<div class="modal-overlay" id="modal-overlay" onclick="closeModal(event)">
+  <div class="modal" id="modal-content">
+    <div class="modal-header">
+      <div class="modal-title" id="modal-title">—</div>
+      <button class="modal-close" onclick="closeModalDirect()">✕</button>
+    </div>
+    <div id="modal-body"></div>
+  </div>
+</div>
+
+<!-- MODAL ALERTA -->
+<div class="modal-overlay" id="alert-modal-overlay" onclick="closeAlertModal(event)">
+  <div class="modal" style="max-width:480px">
+    <div class="modal-header">
+      <div class="modal-title">🔔 Criar Alerta de Licitação</div>
+      <button class="modal-close" onclick="document.getElementById('alert-modal-overlay').classList.remove('show')">✕</button>
+    </div>
+    <div class="modal-section">
+      <div class="modal-label">Palavras-chave</div>
+      <input type="text" class="search-input" style="margin-bottom:12px" placeholder="Ex: informática, TI, software" />
+      <div class="modal-label">Estado</div>
+      <select class="search-input" style="margin-bottom:12px">
+        <option>Todos os estados</option>
+        <option>São Paulo</option>
+        <option>Rio de Janeiro</option>
+      </select>
+      <div class="modal-label">Valor mínimo (R$)</div>
+      <input type="text" class="search-input" style="margin-bottom:12px" placeholder="Ex: 10000" />
+      <div class="modal-label">Receber alertas por</div>
+      <div style="display:flex;gap:8px;margin-bottom:20px">
+        <button class="btn btn-ghost" style="flex:1">📧 E-mail</button>
+        <button class="btn btn-primary" style="flex:1">💬 WhatsApp</button>
+      </div>
+      <button class="btn btn-primary" style="width:100%;justify-content:center;padding:12px" onclick="document.getElementById('alert-modal-overlay').classList.remove('show')">
+        ✅ Ativar Alerta
+      </button>
+    </div>
+  </div>
+</div>
+
+<script>
+const PNCP_BASE = 'https://pncp.gov.br/api/consulta/v1';
+let currentPage = 1;
+let allData = [];
+let currentTab = 'todas';
+
+const modalidadeMap = {
+  1:'Leilão', 2:'Diálogo Comp.', 3:'Concurso', 4:'Concorrência',
+  5:'Concorrência', 6:'Pregão Eletrônico', 7:'Pregão Presencial',
+  8:'Dispensa', 9:'Inexigibilidade', 10:'Manifestação de Interesse',
+  11:'Pré-qualificação', 12:'Credenciamento', 13:'Leilão Eletrônico'
+};
+
+function fmtMoeda(v) {
+  if (!v) return '—';
+  return 'R$ ' + Number(v).toLocaleString('pt-BR', {minimumFractionDigits:2, maximumFractionDigits:2});
+}
+function fmtData(d) {
+  if (!d) return '—';
+  try {
+    const s = String(d);
+    if (s.length === 8) return `${s.slice(6,8)}/${s.slice(4,6)}/${s.slice(0,4)}`;
+    const dt = new Date(s); if (isNaN(dt)) return d;
+    return dt.toLocaleDateString('pt-BR');
+  } catch { return d; }
+}
+function diasRestantes(dtStr) {
+  if (!dtStr) return null;
+  try {
+    let dt;
+    const s = String(dtStr);
+    if (s.length === 8) dt = new Date(`${s.slice(0,4)}-${s.slice(4,6)}-${s.slice(6,8)}`);
+    else dt = new Date(s);
+    if (isNaN(dt)) return null;
+    const diff = Math.ceil((dt - new Date()) / 86400000);
+    return diff;
+  } catch { return null; }
+}
+
+async function loadLicitacoes() {
+  currentPage = 1;
+  const keyword = document.getElementById('keyword').value.trim();
+  const uf = document.getElementById('uf').value;
+  renderLoader();
+  try {
+    let url;
+    const hoje = new Date();
+    const pad = n => String(n).padStart(2,'0');
+    const dataFim = `${hoje.getFullYear()}${pad(hoje.getMonth()+1)}${pad(hoje.getDate())}`;
+    const dataIni = `${hoje.getFullYear()}${pad(hoje.getMonth()+1)}01`;
+
+    if (currentTab === 'abertas') {
+      url = `${PNCP_BASE}/contratacoes/proposta?dataFinal=${dataFim}&pagina=1&tamanhoPagina=20`;
+    } else if (keyword) {
+      url = `${PNCP_BASE}/contratacoes/publicacao?dataInicial=${dataIni}&dataFinal=${dataFim}&pagina=1&tamanhoPagina=20`;
+    } else {
+      url = `${PNCP_BASE}/contratacoes/publicacao?dataInicial=${dataIni}&dataFinal=${dataFim}&pagina=1&tamanhoPagina=20`;
+    }
+    const res = await fetch(url);
+    if (!res.ok) throw new Error('Erro na API');
+    const data = await res.json();
+    let items = data.data || data.content || data || [];
+    if (keyword) {
+      const kw = keyword.toLowerCase();
+      items = items.filter(i =>
+        (i.objetoCompra || i.descricaoObjeto || '').toLowerCase().includes(kw) ||
+        (i.nomeOrgao || '').toLowerCase().includes(kw)
+      );
+    }
+    allData = items;
+    renderStats(allData);
+    renderList(allData);
+    renderPagination(allData.length);
+  } catch (e) {
+    renderError();
+  }
+}
+
+function renderLoader() {
+  document.getElementById('licit-list').innerHTML = `
+    <div class="loader-wrap">
+      <div class="spinner"></div>
+      <p style="color:var(--muted);font-size:14px">Buscando licitações no PNCP...</p>
+    </div>`;
+  document.getElementById('pagination').innerHTML = '';
+  document.getElementById('result-sub').textContent = 'Aguarde...';
+  document.getElementById('result-badge').innerHTML = '';
+}
+
+function renderError() {
+  document.getElementById('licit-list').innerHTML = `
+    <div class="empty-state">
+      <div class="icon">⚠️</div>
+      <p style="margin-bottom:8px">Não foi possível conectar ao PNCP.</p>
+      <p style="font-size:13px;color:var(--muted)">A API pública pode estar com instabilidade. Tente novamente em instantes.</p>
+      <button class="btn btn-primary" style="margin-top:16px" onclick="loadLicitacoes()">Tentar novamente</button>
+    </div>`;
+  document.getElementById('result-sub').textContent = 'Erro ao buscar dados';
+}
+
+function renderStats(items) {
+  document.getElementById('stat-abertas').textContent = items.length;
+  const hoje = new Date();
+  const relevantes = items.filter(i => {
+    const obj = (i.objetoCompra || '').toLowerCase();
+    return ['informática','ti','serviço','consultoria','manutenção','limpeza','fornecimento'].some(k=>obj.includes(k));
+  }).length;
+  document.getElementById('stat-relevantes').textContent = relevantes;
+  const urgentes = items.filter(i => { const d = diasRestantes(i.dataFim || i.dataEncerramentoProposta); return d !== null && d <= 2 && d >= 0; }).length;
+  document.getElementById('stat-urgentes').textContent = urgentes;
+  const total = items.reduce((a,i) => a + (i.valorTotalEstimado || i.valorTotal || 0), 0);
+  document.getElementById('stat-volume').textContent = total > 0
+    ? (total >= 1e6 ? 'R$ ' + (total/1e6).toFixed(1) + 'M' : 'R$ ' + (total/1e3).toFixed(0) + 'K')
+    : '—';
+}
+
+function renderList(items) {
+  const start = (currentPage-1)*10, end = start+10;
+  const page = items.slice(start, end);
+  document.getElementById('result-sub').textContent =
+    `${items.length} licitação${items.length!==1?'s':''} encontrada${items.length!==1?'s':''}`;
+  document.getElementById('result-badge').innerHTML =
+    `<span class="badge badge-blue">📡 Dados ao vivo do PNCP</span>`;
+
+  if (!page.length) {
+    document.getElementById('licit-list').innerHTML = `
+      <div class="empty-state">
+        <div class="icon">🔍</div>
+        <p>Nenhuma licitação encontrada para essa busca.</p>
+        <p style="font-size:13px;margin-top:8px">Tente outras palavras-chave ou remova o filtro de estado.</p>
+      </div>`;
+    return;
+  }
+
+  document.getElementById('licit-list').innerHTML = page.map((item, idx) => {
+    const obj = item.objetoCompra || item.descricaoObjeto || 'Objeto não informado';
+    const orgao = item.nomeOrgao || item.razaoSocialOrgao || 'Órgão não informado';
+    const mod = modalidadeMap[item.modalidadeId || item.codigoModalidade] || 'Modalidade não informada';
+    const uf = item.ufNome || item.siglaUf || '';
+    const municipio = item.municipioNome || '';
+    const valor = item.valorTotalEstimado || item.valorTotal;
+    const dtPub = fmtData(item.dataPublicacaoPncp || item.dataPublicacao);
+    const dtEnc = item.dataEncerramentoProposta || item.dataFim;
+    const dias = diasRestantes(dtEnc);
+    let urgBadge = '';
+    if (dias !== null && dias >= 0 && dias <= 2) urgBadge = `<span class="badge badge-red">🔴 Encerra em ${dias}d</span>`;
+    else if (dias !== null && dias >= 0 && dias <= 7) urgBadge = `<span class="badge badge-yellow">⚠️ ${dias} dias</span>`;
+    else if (dias !== null && dias >= 0) urgBadge = `<span class="badge badge-green">✅ ${dias} dias</span>`;
+    let modBadge = `<span class="badge badge-blue">${mod}</span>`;
+    return `
+    <div class="licit-card" onclick="openModal(${idx + (currentPage-1)*10})">
+      <div class="licit-top">
+        <div class="licit-obj">${obj.length > 150 ? obj.slice(0,150)+'...' : obj}</div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;flex-shrink:0">${urgBadge}</div>
+      </div>
+      <div class="licit-meta">
+        <div class="licit-meta-item">🏢 <strong>${orgao.length>50?orgao.slice(0,50)+'...':orgao}</strong></div>
+        ${municipio||uf ? `<div class="licit-meta-item">📍 <strong>${[municipio,uf].filter(Boolean).join(' — ')}</strong></div>` : ''}
+        <div class="licit-meta-item">📅 Pub.: <strong>${dtPub}</strong></div>
+        ${dtEnc ? `<div class="licit-meta-item">⏰ Enc.: <strong>${fmtData(dtEnc)}</strong></div>` : ''}
+      </div>
+      <div class="licit-footer">
+        ${modBadge}
+        <div style="margin-left:auto;text-align:right">
+          <div class="licit-value">${fmtMoeda(valor)}</div>
+          <div class="licit-value-label">Valor estimado</div>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function renderPagination(total) {
+  const pages = Math.ceil(total / 10);
+  if (pages <= 1) { document.getElementById('pagination').innerHTML = ''; return; }
+  let html = '';
+  if (currentPage > 1) html += `<button class="page-btn" onclick="goPage(${currentPage-1})">‹</button>`;
+  for (let i = 1; i <= Math.min(pages, 7); i++) {
+    html += `<button class="page-btn ${i===currentPage?'active':''}" onclick="goPage(${i})">${i}</button>`;
+  }
+  if (currentPage < pages) html += `<button class="page-btn" onclick="goPage(${currentPage+1})">›</button>`;
+  html += `<span class="page-info">${total} resultados</span>`;
+  document.getElementById('pagination').innerHTML = html;
+}
+
+function goPage(p) { currentPage = p; renderList(allData); renderPagination(allData.length); window.scrollTo(0,0); }
+
+function switchTab(el, tab) {
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  el.classList.add('active');
+  currentTab = tab;
+  loadLicitacoes();
+}
+
+function openModal(idx) {
+  const item = allData[idx];
+  if (!item) return;
+  const obj = item.objetoCompra || item.descricaoObjeto || 'Não informado';
+  const orgao = item.nomeOrgao || item.razaoSocialOrgao || '—';
+  const mod = modalidadeMap[item.modalidadeId || item.codigoModalidade] || '—';
+  const valor = fmtMoeda(item.valorTotalEstimado || item.valorTotal);
+  const dtPub = fmtData(item.dataPublicacaoPncp || item.dataPublicacao);
+  const dtEnc = fmtData(item.dataEncerramentoProposta || item.dataFim);
+  const local = [item.municipioNome, item.ufNome || item.siglaUf].filter(Boolean).join(' — ') || '—';
+  const linkPncp = item.linkSistemaOrigem || `https://pncp.gov.br/app/editais/${item.orgaoEntidade?.cnpj || ''}/${item.ano || ''}/${item.sequencialCompra || ''}`;
+
+  document.getElementById('modal-title').textContent = obj.length > 120 ? obj.slice(0,120)+'...' : obj;
+  document.getElementById('modal-body').innerHTML = `
+    <div class="modal-grid" style="margin-bottom:20px">
+      <div class="modal-section">
+        <div class="modal-label">Órgão</div>
+        <div class="modal-value">${orgao}</div>
+      </div>
+      <div class="modal-section">
+        <div class="modal-label">Localidade</div>
+        <div class="modal-value">${local}</div>
+      </div>
+      <div class="modal-section">
+        <div class="modal-label">Modalidade</div>
+        <div class="modal-value"><span class="badge badge-blue">${mod}</span></div>
+      </div>
+      <div class="modal-section">
+        <div class="modal-label">Valor Estimado</div>
+        <div class="modal-value" style="font-family:var(--font-display);font-size:18px;font-weight:700;color:var(--accent-light)">${valor}</div>
+      </div>
+      <div class="modal-section">
+        <div class="modal-label">Data de Publicação</div>
+        <div class="modal-value">${dtPub}</div>
+      </div>
+      <div class="modal-section">
+        <div class="modal-label">Encerramento</div>
+        <div class="modal-value">${dtEnc}</div>
+      </div>
+    </div>
+    <div class="modal-section">
+      <div class="modal-label">Objeto completo</div>
+      <div class="modal-value">${obj}</div>
+    </div>
+    <div class="modal-ai" id="modal-ai-area">
+      <h4>✨ Análise da IA</h4>
+      <div class="ai-loading">
+        <div class="dot-pulse"><span></span><span></span><span></span></div>
+        <span>Analisando com IA...</span>
+      </div>
+    </div>
+    <div style="margin-top:20px;display:flex;gap:10px">
+      <a href="${linkPncp}" target="_blank" class="btn btn-ghost" style="flex:1;justify-content:center">🔗 Ver no PNCP</a>
+      <button class="btn btn-primary" style="flex:1;justify-content:center" onclick="salvarFavorito()">⭐ Salvar</button>
+    </div>`;
+  document.getElementById('modal-overlay').classList.add('show');
+  analyzeModalItem(obj, orgao, mod, valor, dtEnc);
+}
+
+async function analyzeModalItem(obj, orgao, mod, valor, dtEnc) {
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        model:'claude-sonnet-4-6', max_tokens:500,
+        system:'Você é um especialista em licitações públicas brasileiras. Analise a licitação e responda em português de forma direta e útil para uma PME. Seja objetivo, máximo 4 frases.',
+        messages:[{role:'user', content:`Analise esta licitação:\nObjeto: ${obj}\nÓrgão: ${orgao}\nModalidade: ${mod}\nValor: ${valor}\nEncerramento: ${dtEnc}\n\nResponda: 1) Qual o tipo de empresa mais adequada para participar? 2) Quais são os pontos de atenção desta licitação? 3) Vale a pena tentar?`}]
+      })
+    });
+    const data = await res.json();
+    const text = data.content?.[0]?.text || 'Análise não disponível no momento.';
+    document.getElementById('modal-ai-area').innerHTML = `<h4>✨ Análise da IA</h4><p>${text.replace(/\n/g,'<br>')}</p>`;
+  } catch {
+    document.getElementById('modal-ai-area').innerHTML = `<h4>✨ Análise da IA</h4><p style="color:var(--muted)">Análise temporariamente indisponível.</p>`;
+  }
+}
+
+async function analyzeWithAI() {
+  const keyword = document.getElementById('keyword').value.trim() || 'licitações gerais';
+  if (!allData.length) { alert('Faça uma busca primeiro.'); return; }
+  const top5 = allData.slice(0,5).map((i,idx) => `${idx+1}. ${i.objetoCompra||''} — ${fmtMoeda(i.valorTotalEstimado||i.valorTotal)}`).join('\n');
+  const btn = document.querySelector('[onclick="analyzeWithAI()"]');
+  btn.textContent = '⏳ Analisando...';
+  btn.disabled = true;
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        model:'claude-sonnet-4-6', max_tokens:600,
+        system:'Você é um consultor de licitações públicas. Responda em português, de forma direta e prática para PMEs brasileiras.',
+        messages:[{role:'user', content:`Busquei por "${keyword}" e encontrei ${allData.length} licitações. Os 5 primeiros resultados:\n${top5}\n\nDê um panorama do mercado, oportunidades e principais segmentos. Máximo 5 frases.`}]
+      })
+    });
+    const data = await res.json();
+    const text = data.content?.[0]?.text || '';
+    const existing = document.querySelector('.ai-panorama');
+    if (existing) existing.remove();
+    const box = document.createElement('div');
+    box.className = 'ai-box show ai-panorama';
+    box.innerHTML = `<div class="ai-box-header">✨ Panorama por IA — "${keyword}"</div><div class="ai-box-text">${text.replace(/\n/g,'<br>')}</div>`;
+    document.querySelector('.search-area').after(box);
+  } catch {}
+  btn.textContent = '✨ Análise por IA';
+  btn.disabled = false;
+}
+
+function closeModal(e) { if (e.target === document.getElementById('modal-overlay')) closeModalDirect(); }
+function closeModalDirect() { document.getElementById('modal-overlay').classList.remove('show'); }
+function openAlertModal() { document.getElementById('alert-modal-overlay').classList.add('show'); }
+function closeAlertModal(e) { if (e.target === document.getElementById('alert-modal-overlay')) document.getElementById('alert-modal-overlay').classList.remove('show'); }
+function salvarFavorito() { alert('✅ Licitação salva nos favoritos!'); }
+
+// MOBILE SIDEBAR
+function toggleSidebar(open) {
+  document.getElementById('sidebar').classList.toggle('open', open);
+  document.getElementById('sidebar-overlay').classList.toggle('show', open);
+}
+
+// DAILY DIGEST
+let digestChannel = 'whats';
+function setChannel(ch) {
+  digestChannel = ch;
+  document.getElementById('ch-whats').className = ch === 'whats' ? 'btn btn-primary' : 'btn btn-ghost';
+  document.getElementById('ch-email').className = ch === 'email' ? 'btn btn-primary' : 'btn btn-ghost';
+}
+function openDigestModal() { document.getElementById('digest-modal-overlay').classList.add('show'); }
+function closeDigestModal(e) { if (e.target === document.getElementById('digest-modal-overlay')) document.getElementById('digest-modal-overlay').classList.remove('show'); }
+function toggleDigest(el) {
+  const card = document.querySelector('.digest-text strong');
+  card.textContent = el.checked ? 'Resumo diário às 8h' : 'Resumo diário desativado';
+}
+// ⚠️ Troque pela URL do seu backend depois do deploy na Vercel
+// Exemplo: 'https://licitaia-backend.vercel.app/api/digest-preferences'
+const DIGEST_API_URL = 'https://SEU-BACKEND.vercel.app/api/digest-preferences';
+
+async function saveDigest() {
+  const time = document.getElementById('digest-time').value;
+  const email = document.getElementById('digest-email').value.trim();
+  const keywords = document.getElementById('digest-keywords').value.trim();
+  const statusEl = document.getElementById('digest-status');
+  const btn = document.getElementById('digest-save-btn');
+
+  if (!email || !email.includes('@')) {
+    statusEl.textContent = '⚠️ Informe um e-mail válido para receber o resumo.';
+    statusEl.style.color = 'var(--red)';
+    return;
+  }
+
+  btn.textContent = '⏳ Salvando...';
+  btn.disabled = true;
+  statusEl.textContent = '';
+
+  try {
+    const res = await fetch(DIGEST_API_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        email,
+        send_time: time,
+        channel: digestChannel === 'whats' ? 'whatsapp' : 'email',
+        keywords: keywords || null,
+      }),
+    });
+
+    if (!res.ok) throw new Error('Falha ao salvar');
+
+    document.querySelector('.digest-text strong').textContent = `Resumo diário às ${time}`;
+    document.querySelector('.digest-text span').textContent =
+      digestChannel === 'whats'
+        ? 'WhatsApp ainda não está ativo — você receberá por e-mail por enquanto'
+        : 'Enviado direto no seu e-mail';
+    statusEl.textContent = '✅ Preferências salvas!';
+    statusEl.style.color = 'var(--green)';
+    setTimeout(() => { document.getElementById('digest-modal-overlay').classList.remove('show'); }, 900);
+  } catch (err) {
+    statusEl.textContent = '⚠️ Não foi possível salvar agora. O backend está configurado?';
+    statusEl.style.color = 'var(--red)';
+  }
+  btn.textContent = '✅ Salvar Preferências';
+  btn.disabled = false;
+}
+
+// Init
+loadLicitacoes();
+</script>
+<!-- BOTTOM NAV MOBILE -->
+<nav class="bottom-nav">
+  <button class="bottom-nav-item active">
+    <span class="icon">📊</span> Painel
+  </button>
+  <button class="bottom-nav-item">
+    <span class="icon">🔍</span> Buscar
+  </button>
+  <button class="bottom-nav-item" onclick="openDigestModal()">
+    <span class="icon">🔔</span> Alertas
+    <span class="dot"></span>
+  </button>
+  <button class="bottom-nav-item">
+    <span class="icon">⭐</span> Salvos
+  </button>
+  <button class="bottom-nav-item" onclick="toggleSidebar(true)">
+    <span class="icon">⚙️</span> Mais
+  </button>
+</nav>
+
+<!-- MODAL LEMBRETE DIÁRIO -->
+<div class="modal-overlay" id="digest-modal-overlay" onclick="closeDigestModal(event)">
+  <div class="modal" style="max-width:480px">
+    <div class="modal-header">
+      <div class="modal-title">🔔 Resumo Diário</div>
+      <button class="modal-close" onclick="document.getElementById('digest-modal-overlay').classList.remove('show')">✕</button>
+    </div>
+    <div class="modal-section">
+      <div class="modal-value" style="margin-bottom:18px;color:var(--muted2)">
+        Toda manhã, a IA seleciona as licitações mais relevantes pro seu perfil e te envia um resumo direto — sem precisar abrir o painel.
+      </div>
+      <div class="modal-label">Horário de envio</div>
+      <select class="search-input" style="margin-bottom:14px" id="digest-time">
+        <option value="07:00">07:00</option>
+        <option value="08:00" selected>08:00</option>
+        <option value="09:00">09:00</option>
+        <option value="12:00">12:00</option>
+        <option value="18:00">18:00</option>
+      </select>
+      <div class="modal-label">Canal de envio</div>
+      <div style="display:flex;gap:8px;margin-bottom:14px">
+        <button class="btn btn-primary" style="flex:1" id="ch-whats" onclick="setChannel('whats')">💬 WhatsApp</button>
+        <button class="btn btn-ghost" style="flex:1" id="ch-email" onclick="setChannel('email')">📧 E-mail</button>
+      </div>
+      <p style="font-size:11px;color:var(--muted);margin:-8px 0 14px">📌 WhatsApp em breve — por enquanto o resumo chega por e-mail mesmo se você escolher essa opção.</p>
+      <div class="modal-label">Filtrar por</div>
+      <input type="text" class="search-input" id="digest-keywords" style="margin-bottom:14px" placeholder="Ex: TI, construção, limpeza" />
+      <div class="modal-label">Seu e-mail</div>
+      <input type="email" class="search-input" id="digest-email" style="margin-bottom:20px" placeholder="seuemail@empresa.com" />
+      <button class="btn btn-primary" style="width:100%;justify-content:center;padding:12px" id="digest-save-btn" onclick="saveDigest()">
+        ✅ Salvar Preferências
+      </button>
+      <p id="digest-status" style="font-size:12px;color:var(--muted);margin-top:10px;text-align:center"></p>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>
